@@ -3,6 +3,7 @@ import { Header } from '../../header/header';
 import { DELIVERY_SIZES, DELIVERY_SPEEDS } from './order.config';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UpperCasePipe } from '@angular/common';
+import { DeliveryApi } from '../../services/delivery-api';
 
 declare var ymaps: any;
 
@@ -25,7 +26,10 @@ export class Order {
   public orderId: any = signal(null);
   public calculationResult: any = signal(null);
 
-  constructor(private formBuilder: FormBuilder) {
+  constructor(
+    private formBuilder: FormBuilder,
+    private deliveryApi: DeliveryApi
+  ) {
     this.routeForm = this.formBuilder.group({
       from: ['', Validators.required],
       to: ['', Validators.required],
@@ -145,8 +149,14 @@ export class Order {
       calculation: calculation,
       createdAt: new Date().toISOString()
     };
+    this.deliveryApi.createDelivery(payload).subscribe((response) => {
+      if ('error' in response) {
+        alert(response.error);
+        return;
+      }
 
-    console.log(payload);
+      this.orderId.set(response.id);
+    });
     this.orderId.set(1);
   }
 }
