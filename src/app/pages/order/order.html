@@ -94,22 +94,23 @@
                     <div class="order-fields">
                         <div class="main-field">
                             <input formControlName="name" id="customerName" placeholder="Ваше имя" autocomplete="off" />
+                            <div>
+                                @if (this.orderForm.get('name')?.invalid && (this.orderForm.get('name')?.dirty ||
+                                this.orderForm.get('name')?.touched)) {
+                                <label for="customerName" class="input-error">Заполните имя</label>
+                                }
+                            </div>
                         </div>
-                        <div>
-                            @if (this.orderForm.get('name')?.invalid && (this.orderForm.get('name')?.dirty ||
-                            this.orderForm.get('name')?.touched)) {
-                            <label for="customerName" class="input-error">Заполните имя</label>
-                            }
-                        </div>
+
                         <div class="main-field">
                             <input formControlName="phone" id="customerPhone" placeholder="Ваш телефон"
                                 autocomplete="off" inputmode="tel" />
-                        </div>
-                        <div>
-                            @if (this.orderForm.get('phone')?.invalid && (this.orderForm.get('phone')?.dirty ||
-                            this.orderForm.get('phone')?.touched)) {
-                            <label for="customerName" class="input-error">Заполните телефон</label>
-                            }
+                            <div>
+                                @if (this.orderForm.get('phone')?.invalid && (this.orderForm.get('phone')?.dirty ||
+                                this.orderForm.get('phone')?.touched)) {
+                                <label for="customerPhone" class="input-error">Заполните телефон</label>
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
