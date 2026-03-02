@@ -93,6 +93,15 @@ npm test
 
 3. Получить API ключи можно на: https://developer.tech.yandex.com/services/api/maps/
 
+## Линтинг
+
+В проект добавлен ESLint для проверки TypeScript-кода. Установите зависимости (`npm install`), затем запускайте
+```bash
+npm run lint
+```
+правка автоматически (`--fix`).
+
+
 #### Как это работает
 
 - Переменные из `.env` автоматически загружаются при запуске `npm start` или `npm build`

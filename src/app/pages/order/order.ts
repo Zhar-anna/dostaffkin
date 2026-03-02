@@ -6,6 +6,8 @@ import { UpperCasePipe } from '@angular/common';
 import { DeliveryApi } from '../../services/delivery-api';
 import { ToastrService } from 'ngx-toastr';
 
+import { ORDER_STRINGS } from './order.lang';
+
 declare var ymaps: any;
 
 @Component({
@@ -18,6 +20,7 @@ declare var ymaps: any;
 export class Order {
   public readonly sizes = DELIVERY_SIZES;
   public readonly speeds = DELIVERY_SPEEDS;
+  public STR = ORDER_STRINGS;
   toastr = inject(ToastrService);
 
   public map: any;
@@ -28,6 +31,9 @@ export class Order {
 
   public orderId: any = signal(null);
   public calculationResult: any = signal(null);
+
+  // состояние загрузки при отправке заявки
+  public isLoading: any = signal(false);
 
   constructor(
     private formBuilder: FormBuilder,
@@ -48,12 +54,40 @@ export class Order {
 
   ngOnInit() {
     ymaps.ready(() => {
+      // сразу показываем карту, центрируем на Москву по умолчанию
+      this.init();
+
+      // затем пытаемся получить реальную геопозицию и обновить центр
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
-          (pos) => (this.init(pos.coords.latitude, pos.coords.longitude)),
-          () => this.init());
-      } else {
-        this.init();
+          (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            if (this.map) {
+              // перемещаем существующую карту вместо пересоздания
+              this.map.setCenter([lat, lon], 15);
+              // обратное геокодирование для заполнения поля "Откуда" и добавления точки
+              ymaps.geocode([lat, lon], { kind: 'house' }).then(
+                (res: any) => {
+                  const first = res.geoObjects.get(0);
+                  if (first?.getAddressLine) {
+                    this.routeForm.controls['from'].setValue(first.getAddressLine());
+                    this.map.geoObjects.add(first);
+                  }
+                },
+                () => { }
+              );
+            } else {
+              // запасной вариант, не должно происходить
+              this.init(lat, lon);
+            }
+          },
+          (err) => {
+            // отказ в разрешении или другая ошибка – оставляем Москву
+            this.toastr.error(this.STR.geolocationFail);
+          },
+          { timeout: 5000 }
+        );
       }
     });
   }
@@ -65,6 +99,7 @@ export class Order {
       zoom: lat && lon ? 15 : 5,
       controls: ['zoomControl']
     });
+
     // Обратное геокодирование: определяем ближайший адрес по координатам, подставляем в Откуда и добавляем поинт на карту
     if (lat != null && lon != null) {
       ymaps.geocode([lat, lon], { kind: 'house' }).then(
@@ -78,6 +113,7 @@ export class Order {
         () => { }
       );
     }
+
     // Подключаем подсказки адресов к полям от яндекса
     (new ymaps.SuggestView('from')).events.add('select', (event: any) => (this.routeForm.controls['from'].setValue(event.get('item')?.value ?? '')));
     (new ymaps.SuggestView('to')).events.add('select', (event: any) => (this.routeForm.controls['to'].setValue(event.get('item')?.value ?? '')));
@@ -152,18 +188,18 @@ export class Order {
 
   private failedCalculation() {
     this.calculationResult.set(null);
-    this.toastr.error('Не удалось построить маршрут. Проверьте адреса и выбранные параметры.');
+    this.toastr.error(this.STR.routeCalculationFail);
   }
 
   public submitOrder() {
     const calculation = this.calculationResult();
     if (!calculation) {
-      this.toastr.error('Сначала рассчитайте стоимость, чтобы оформить заявку');
+      this.toastr.error(this.STR.calculateFirstError);
       return;
     }
 
     if (this.orderForm.invalid) {
-      this.toastr.error('Введите имя и корректный телефон');
+      this.toastr.error(this.STR.invalidFormError);
       return;
     }
 
@@ -177,14 +213,25 @@ export class Order {
       calculation: calculation,
       createdAt: new Date().toISOString()
     };
-    this.deliveryApi.createDelivery(payload).subscribe((response) => {
-      if ('error' in response) {
-        this.toastr.error(response.error);
-        return;
+
+    // показать загрузчик и затемнить форму
+    this.isLoading.set(true);
+
+    this.deliveryApi.createDelivery(payload).subscribe(
+      (response) => {
+        this.isLoading.set(false);
+        if ('error' in response) {
+          this.toastr.error(response.error);
+          return;
+        }
+        this.isLoading.set(false);
+        this.toastr.success(this.STR.orderSuccessToast);
+        this.orderId.set(response.id);
+      },
+      (err) => {
+        this.isLoading.set(false);
+        this.toastr.error(this.STR.submissionError);
       }
-      this.toastr.success('Заявка успешно оформлена');
-      this.orderId.set(response.id);
-    });
-    this.orderId.set(1);
+    );
   }
 }

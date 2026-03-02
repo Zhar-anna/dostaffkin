@@ -2,14 +2,14 @@
     <app-header />
     <main class="track-content">
         <section class="track-card track-search">
-            <div class="track-title">Отследить посылку</div>
+            <div class="track-title">{{STR.pageTitle}}</div>
             <div class="track-action">
                 <div class="main-field track-field">
-                    <input id="trackNumber" [(ngModel)]="trackNumber" placeholder="Введите номер посылки"
+                    <input id="trackNumber" [(ngModel)]="trackNumber" placeholder="{{STR.placeholder}}"
                         autocomplete="off" />
                 </div>
                 <button id="trackButton" class="button track-button" type="button"
-                    (click)="trackShipment()">Отследить</button>
+                    (click)="trackShipment()">{{STR.buttonLabel}}</button>
             </div>
         </section>
         <section class="track-card track-result" id="trackResult" [class.is-visible]="trackResult()">
@@ -27,7 +27,7 @@
                             </svg>
                         </div>
                         <div class="track-route-address" id="trackFromValue">
-                            Откуда: {{trackResult()?.route.from}}
+                            {{STR.fromPrefix}}{{trackResult()?.route.from}}
                         </div>
                     </div>
                     <div class="track-route track-route-arrow">
@@ -48,13 +48,13 @@
                             </svg>
                         </div>
                         <div class="track-route-address" id="trackToValue">
-                            Куда: {{trackResult()?.route.to}}
+                            {{STR.toPrefix}}{{trackResult()?.route.to}}
                         </div>
                     </div>
                 </div>
             </div>
             <div class="track-info">
-                <div class="track-status-title">Статус данной посылки:</div>
+                <div class="track-status-title">{{STR.statusTitle}}</div>
                 <div class="track-status-list" id="trackStatusList">
                     @for (status of trackResult()?.statuses; track status.type + status.date) {
                     <div class="track-status" [class]="status.type">
