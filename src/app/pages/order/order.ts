@@ -1,12 +1,12 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, effect } from '@angular/core';
 import { Header } from '../../header/header';
+import { LanguageService, Lang } from '../../services/language.service';
+import { ORDER_STRINGS } from './order.lang';
 import { DELIVERY_SIZES, DELIVERY_SPEEDS } from './order.config';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UpperCasePipe } from '@angular/common';
 import { DeliveryApi } from '../../services/delivery-api';
 import { ToastrService } from 'ngx-toastr';
-
-import { ORDER_STRINGS } from './order.lang';
 
 declare var ymaps: any;
 
@@ -20,7 +20,8 @@ declare var ymaps: any;
 export class Order {
   public readonly sizes = DELIVERY_SIZES;
   public readonly speeds = DELIVERY_SPEEDS;
-  public STR = ORDER_STRINGS;
+  public STR = signal(ORDER_STRINGS['ru']);
+  private langService = inject(LanguageService);
   toastr = inject(ToastrService);
 
   public map: any;
@@ -39,6 +40,12 @@ export class Order {
     private formBuilder: FormBuilder,
     private deliveryApi: DeliveryApi
   ) {
+    // watch language changes
+    effect(() => {
+      const l: Lang = this.langService.lang();
+      this.STR.set(ORDER_STRINGS[l]);
+    });
+
     this.routeForm = this.formBuilder.group({
       from: ['', Validators.required],
       to: ['', Validators.required],
@@ -84,7 +91,7 @@ export class Order {
           },
           (err) => {
             // отказ в разрешении или другая ошибка – оставляем Москву
-            this.toastr.error(this.STR.geolocationFail);
+            this.toastr.error(this.STR().geolocationFail);
           },
           { timeout: 5000 }
         );
@@ -188,18 +195,18 @@ export class Order {
 
   private failedCalculation() {
     this.calculationResult.set(null);
-    this.toastr.error(this.STR.routeCalculationFail);
+    this.toastr.error(this.STR().routeCalculationFail);
   }
 
   public submitOrder() {
     const calculation = this.calculationResult();
     if (!calculation) {
-      this.toastr.error(this.STR.calculateFirstError);
+      this.toastr.error(this.STR().calculateFirstError);
       return;
     }
 
     if (this.orderForm.invalid) {
-      this.toastr.error(this.STR.invalidFormError);
+      this.toastr.error(this.STR().invalidFormError);
       return;
     }
 
@@ -225,12 +232,12 @@ export class Order {
           return;
         }
         this.isLoading.set(false);
-        this.toastr.success(this.STR.orderSuccessToast);
+        this.toastr.success(this.STR().orderSuccessToast);
         this.orderId.set(response.id);
       },
       (err) => {
         this.isLoading.set(false);
-        this.toastr.error(this.STR.submissionError);
+        this.toastr.error(this.STR().submissionError);
       }
     );
   }

@@ -39,6 +39,6 @@ export const DELIVERY_SIZES = [
 ] as const;
 
 export const DELIVERY_SPEEDS = [
-    {value: 'regular', label: 'Обычная'},
-    {value: 'fast', label: 'Приоритетная'}
+    { value: 'regular' },
+    { value: 'fast' }
 ] as const;

@@ -1,10 +1,15 @@
 <header class="header">
     <a class="header-brand" routerLink="/">
         <div class="header-logo">D</div>
-        <div class="header-title">Dostaffkin</div>
+        <div class="header-title">{{STR().brand}}</div>
     </a>
     <nav class="header-menu">
-        <a class="header-link" routerLink="/order">Оформить <span>доставку</span></a>
-        <a class="header-link" routerLink="/track">Отследить <span>посылку</span></a>
+        <a class="header-link" routerLink="/order">{{STR().orderLink}} <span>{{STR().orderLinkSpan}}</span></a>
+        <a class="header-link" routerLink="/track">{{STR().trackLink}} <span>{{STR().trackLinkSpan}}</span></a>
     </nav>
+
+    <div class="lang-tabs" role="tablist" aria-label="Language selector">
+        <button class="lang-tab" role="tab" (click)="setLang('ru')" [class.is-active]="lang() === 'ru'" [attr.aria-pressed]="lang() === 'ru'">RU</button>
+        <button class="lang-tab" role="tab" (click)="setLang('en')" [class.is-active]="lang() === 'en'" [attr.aria-pressed]="lang() === 'en'">EN</button>
+    </div>
 </header>
